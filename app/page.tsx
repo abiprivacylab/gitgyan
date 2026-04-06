@@ -200,7 +200,35 @@ export default function Home() {
     .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase()) || r.language?.toLowerCase().includes(search.toLowerCase()))
     .sort((a,b) => sort==='stars' ? b.stargazers_count-a.stargazers_count : new Date(b.created_at).getTime()-new Date(a.created_at).getTime())
 
-  const S: Record<string,React.CSSProperties> = {
+  // ── Style helpers (functions kept outside S to satisfy TypeScript) ──
+  const sortBtnStyle = (active: boolean): React.CSSProperties => ({
+    fontFamily:'var(--mono)',fontSize:11,padding:'6px 14px',borderRadius:100,
+    border:`1px solid ${active?'rgba(91,158,255,0.4)':'rgba(255,255,255,0.11)'}`,
+    background:active?'rgba(91,158,255,0.12)':'transparent',
+    color:active?'var(--accent)':'var(--muted)',
+  })
+  const rowStyle = (i: number, total: number, sel: boolean): React.CSSProperties => ({
+    display:'flex',alignItems:'flex-start',gap:14,padding:'16px 20px',
+    background: sel?'#111827':'#0c1120',
+    border:'1px solid',
+    borderColor: sel?'rgba(91,158,255,0.25)':'rgba(255,255,255,0.11)',
+    borderLeft:`3px solid ${sel?'#5b9eff':'transparent'}`,
+    borderTop: i===0 ? undefined : 'none',
+    borderRadius: i===0?'14px 14px 0 0': i===total-1?'0 0 14px 14px':'0',
+    cursor:'pointer',
+  })
+  const badgeStyle = (color: string, bg: string, border: string): React.CSSProperties => ({
+    fontFamily:'var(--mono)',fontSize:10,padding:'2px 8px',borderRadius:100,
+    color, background:bg, border:`1px solid ${border}`,
+  })
+  const langDotStyle = (color: string): React.CSSProperties => ({
+    width:7,height:7,borderRadius:'50%',background:color,display:'inline-block',marginRight:4,
+  })
+  const arrowStyle = (sel: boolean): React.CSSProperties => ({
+    fontSize:18,color:sel?'var(--accent)':'rgba(255,255,255,0.15)',flexShrink:0,marginTop:2,
+  })
+
+  const S: Record<string, React.CSSProperties> = {
     page:     {minHeight:'100vh', fontFamily:'var(--sans)', position:'relative'},
     nav:      {position:'fixed',top:0,left:0,right:0,zIndex:100,display:'flex',alignItems:'center',padding:'0 32px',height:60,background:'rgba(6,8,15,0.88)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.1)'},
     navLogo:  {display:'flex',alignItems:'center',gap:10,color:'#fff',fontFamily:'var(--serif)',fontSize:19,letterSpacing:'-0.3px'},
@@ -224,32 +252,18 @@ export default function Home() {
     searchIcon:{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--muted2)',pointerEvents:'none' as const},
     searchIn: {width:'100%',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:'10px 16px 10px 40px',fontSize:14,color:'var(--text)',transition:'border-color 0.2s'},
     sortRow:  {display:'flex',gap:6},
-    sortBtn:  (active:boolean):React.CSSProperties => ({fontFamily:'var(--mono)',fontSize:11,padding:'6px 14px',borderRadius:100,border:`1px solid ${active?'rgba(91,158,255,0.4)':'rgba(255,255,255,0.11)'}`,background:active?'rgba(91,158,255,0.12)':'transparent',color:active?'var(--accent)':'var(--muted)'}),
     repoCount:{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)',marginLeft:'auto'},
     content:  {display:'flex',gap:20,alignItems:'flex-start'},
     list:     {flex:1,display:'flex',flexDirection:'column' as const},
-    row:      (i:number,total:number,sel:boolean):React.CSSProperties => ({
-      display:'flex',alignItems:'flex-start',gap:14,padding:'16px 20px',
-      background: sel?'#111827':'#0c1120',
-      border:'1px solid',
-      borderColor: sel?'rgba(91,158,255,0.25)':'rgba(255,255,255,0.11)',
-      borderLeft: `3px solid ${sel?'#5b9eff':'transparent'}`,
-      borderTop: i===0?undefined:'none',
-      borderRadius: i===0?'14px 14px 0 0': i===total-1?'0 0 14px 14px':'0',
-      cursor:'pointer',
-    }),
     rank:     {fontFamily:'var(--mono)',fontSize:16,color:'rgba(255,255,255,0.12)',minWidth:32,paddingTop:2},
     info:     {flex:1,minWidth:0},
     nameRow:  {display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' as const,marginBottom:4},
     org:      {fontSize:15,fontWeight:600,color:'var(--muted)'},
     name:     {fontSize:15,fontWeight:600,color:'#fff'},
-    badge:    (color:string,bg:string,border:string):React.CSSProperties => ({fontFamily:'var(--mono)',fontSize:10,padding:'2px 8px',borderRadius:100,color,background:bg,border:`1px solid ${border}`}),
     desc:     {fontSize:13,color:'var(--muted)',lineHeight:1.5,marginBottom:8,overflow:'hidden',whiteSpace:'nowrap' as const,textOverflow:'ellipsis'},
     metaRow:  {display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' as const},
     meta:     {fontFamily:'var(--mono)',fontSize:12,color:'var(--muted)'},
     metaAge:  {fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)'},
-    langDot:  (color:string):React.CSSProperties => ({width:7,height:7,borderRadius:'50%',background:color,display:'inline-block',marginRight:4}),
-    arrow:    (sel:boolean):React.CSSProperties => ({fontSize:18,color:sel?'var(--accent)':'rgba(255,255,255,0.15)',flexShrink:0,marginTop:2}),
 
     // AI panel
     panel:    {width:300,flexShrink:0,position:'sticky' as const,top:80},
@@ -350,7 +364,7 @@ export default function Home() {
           </div>
           <div style={S.sortRow}>
             {([['stars','★ Stars'],['new','✦ Newest']] as const).map(([v,l])=>(
-              <button key={v} className="sort-btn" style={S.sortBtn(sort===v)} onClick={()=>setSort(v)}>{l}</button>
+              <button key={v} className="sort-btn" style={sortBtnStyle(sort===v)} onClick={()=>setSort(v)}>{l}</button>
             ))}
           </div>
           <span style={S.repoCount}>{filtered.length} repos</span>
@@ -375,27 +389,27 @@ export default function Home() {
                 const sel = selected?.id===repo.id
                 const isNew = Math.floor((Date.now()-new Date(repo.created_at).getTime())/86400000)<=7
                 return (
-                  <div key={repo.id} className="repo-row" style={S.row(i,filtered.length,sel)} onClick={()=>handleClick(repo)}>
+                  <div key={repo.id} className="repo-row" style={rowStyle(i,filtered.length,sel)} onClick={()=>handleClick(repo)}>
                     <div style={S.rank}>{String(i+1).padStart(2,'0')}</div>
                     <div style={S.info}>
                       <div style={S.nameRow}>
                         <span style={S.org}>{repo.owner.login} /</span>
                         <span style={S.name}>{repo.name}</span>
-                        {repo.topics?.length>0 && <span style={S.badge('#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')}>✦ AI ready</span>}
-                        {isNew && <span style={S.badge('#4ade9e','rgba(74,222,158,0.08)','rgba(74,222,158,0.3)')}>✦ new</span>}
+                        {repo.topics?.length>0 && <span style={badgeStyle('#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')}>✦ AI ready</span>}
+                        {isNew && <span style={badgeStyle('#4ade9e','rgba(74,222,158,0.08)','rgba(74,222,158,0.3)')}>✦ new</span>}
                       </div>
                       <div style={S.desc}>{repo.description||'No description provided'}</div>
                       <div style={S.metaRow}>
                         <span style={S.meta}>★ {fmtStars(repo.stargazers_count)}</span>
                         {repo.language && (
                           <span style={S.meta}>
-                            <span style={S.langDot(color)}/>{repo.language}
+                            <span style={langDotStyle(color)}/>{repo.language}
                           </span>
                         )}
                         <span style={S.metaAge}>· {timeAgo(repo.created_at)}</span>
                       </div>
                     </div>
-                    <div style={S.arrow(sel)}>{sel?'✦':'›'}</div>
+                    <div style={arrowStyle(sel)}>{sel?'✦':'›'}</div>
                   </div>
                 )
               })}
