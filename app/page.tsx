@@ -32,47 +32,94 @@ const langColors: Record<string, string> = {
   JavaScript: '#f1e05a', Go: '#00add8', 'C++': '#f34b7d',
   C: '#555555', Swift: '#f05138', Kotlin: '#7f52ff',
   Java: '#b07219', Ruby: '#701516', CSS: '#563d7c',
+  PHP: '#4f5d95', Shell: '#89e051', HTML: '#e34c26',
 }
 
-// ─── LOGO SVG ────────────────────────────────────────────────
+// ─── CSS ─────────────────────────────────────────────────────
 
-function GitGyanLogo({ size = 36 }: { size?: number }) {
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #06080f; --bg2: #0c1120; --bg3: #111827;
+    --border: rgba(255,255,255,0.11); --border2: rgba(255,255,255,0.20);
+    --text: #f0f2ff; --muted: rgba(200,215,248,0.65); --muted2: rgba(160,180,230,0.40);
+    --accent: #5b9eff; --accent2: #9175ff;
+    --green: #4ade9e; --amber: #fcd34d; --purple: #a78bfa;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.6; overflow-x: hidden; }
+  a { text-decoration: none; }
+  button { cursor: pointer; font-family: var(--sans); }
+  input { font-family: var(--sans); }
+  ::placeholder { color: var(--muted2); }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes twinkle { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  .spin { animation: spin 1s linear infinite; }
+  .fade-in { animation: fadeInUp 0.4s ease both; }
+
+  .nav-link { color: var(--muted); transition: color 0.2s, background 0.2s; }
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  .repo-row { transition: background 0.15s, border-color 0.15s; }
+  .repo-row:hover { background: var(--bg3) !important; }
+
+  .sort-btn { transition: all 0.15s; }
+  .sort-btn:hover { color: var(--text) !important; border-color: var(--border2) !important; }
+
+  .gh-btn { transition: all 0.2s; }
+  .gh-btn:hover { background: rgba(91,158,255,0.18) !important; }
+
+  .search-input:focus { border-color: rgba(91,158,255,0.4) !important; outline: none; }
+`
+
+// ─── LOGO ─────────────────────────────────────────────────────
+
+function Logo({ size = 34 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
       <defs>
         <linearGradient id="lb" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#0d1a3d" />
-          <stop offset="100%" stopColor="#1a0848" />
+          <stop offset="0%" stopColor="#0d1a3d"/><stop offset="100%" stopColor="#1a0848"/>
         </linearGradient>
         <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7ec8ff" />
-          <stop offset="40%" stopColor="#5b9eff" />
-          <stop offset="100%" stopColor="#9175ff" />
+          <stop offset="0%" stopColor="#7ec8ff"/><stop offset="40%" stopColor="#5b9eff"/><stop offset="100%" stopColor="#9175ff"/>
         </linearGradient>
         <linearGradient id="lr" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#5b9eff" stopOpacity="0.9" />
-          <stop offset="50%" stopColor="#a8d4ff" />
-          <stop offset="100%" stopColor="#9175ff" stopOpacity="0.7" />
+          <stop offset="0%" stopColor="#5b9eff" stopOpacity="0.9"/>
+          <stop offset="50%" stopColor="#a8d4ff"/>
+          <stop offset="100%" stopColor="#9175ff" stopOpacity="0.7"/>
         </linearGradient>
         <radialGradient id="lg2" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#5b9eff" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#5b9eff" stopOpacity="0" />
+          <stop offset="0%" stopColor="#5b9eff" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#5b9eff" stopOpacity="0"/>
         </radialGradient>
       </defs>
-      <circle cx="18" cy="18" r="17" fill="url(#lb)" stroke="#1a2650" strokeWidth="0.8" />
-      <circle cx="18" cy="18" r="12" fill="url(#lg2)" />
-      <circle cx="6" cy="14" r="0.7" fill="#fff" opacity="0.5" />
-      <circle cx="30" cy="13" r="0.6" fill="#fff" opacity="0.45" />
-      <circle cx="5" cy="23" r="0.6" fill="#fff" opacity="0.4" />
-      <circle cx="31" cy="24" r="0.7" fill="#fff" opacity="0.4" />
-      <path d="M9,9 C9,9 9.4,10.4 9,11.8 C8.6,10.4 9,9 9,9Z" fill="#a8c8ff" opacity="0.75" />
-      <path d="M7.2,10.4 C7.2,10.4 9,10.8 10.8,10.4 C9,10 7.2,10.4 7.2,10.4Z" fill="#a8c8ff" opacity="0.75" />
-      <path d="M27,8 C27,8 27.4,9.2 27,10.4 C26.6,9.2 27,8 27,8Z" fill="#c4b5fd" opacity="0.7" />
-      <path d="M25.4,9.2 C25.4,9.2 27,9.6 28.6,9.2 C27,8.8 25.4,9.2 25.4,9.2Z" fill="#c4b5fd" opacity="0.7" />
-      <ellipse cx="18" cy="19.5" rx="20" ry="5.5" fill="none" stroke="url(#lr)" strokeWidth="1.4" transform="rotate(-18 18 19.5)" />
-      <ellipse cx="18" cy="19.5" rx="20" ry="5.5" fill="none" stroke="#fff" strokeWidth="0.6" opacity="0.45" strokeDasharray="14 48" strokeDashoffset="6" transform="rotate(-18 18 19.5)" />
-      <circle cx="37" cy="17" r="1.8" fill="#a8c8ff" opacity="0.85" />
-      <circle cx="0" cy="22" r="1.4" fill="#9175ff" opacity="0.75" />
+      <circle cx="18" cy="18" r="17" fill="url(#lb)" stroke="#1a2650" strokeWidth="0.8"/>
+      <circle cx="18" cy="18" r="12" fill="url(#lg2)"/>
+      <circle cx="6" cy="14" r="0.7" fill="#fff" opacity="0.5"/>
+      <circle cx="30" cy="13" r="0.6" fill="#fff" opacity="0.45"/>
+      <circle cx="5" cy="23" r="0.6" fill="#fff" opacity="0.4"/>
+      <circle cx="31" cy="24" r="0.7" fill="#fff" opacity="0.4"/>
+      <path d="M9,9 C9,9 9.4,10.4 9,11.8 C8.6,10.4 9,9 9,9Z" fill="#a8c8ff" opacity="0.75"/>
+      <path d="M7.2,10.4 C7.2,10.4 9,10.8 10.8,10.4 C9,10 7.2,10.4 7.2,10.4Z" fill="#a8c8ff" opacity="0.75"/>
+      <path d="M27,8 C27,8 27.4,9.2 27,10.4 C26.6,9.2 27,8 27,8Z" fill="#c4b5fd" opacity="0.7"/>
+      <path d="M25.4,9.2 C25.4,9.2 27,9.6 28.6,9.2 C27,8.8 25.4,9.2 25.4,9.2Z" fill="#c4b5fd" opacity="0.7"/>
+      <ellipse cx="18" cy="19.5" rx="20" ry="5.5" fill="none" stroke="url(#lr)" strokeWidth="1.4" transform="rotate(-18 18 19.5)"/>
+      <ellipse cx="18" cy="19.5" rx="20" ry="5.5" fill="none" stroke="#fff" strokeWidth="0.6" opacity="0.45" strokeDasharray="14 48" strokeDashoffset="6" transform="rotate(-18 18 19.5)"/>
+      <circle cx="37" cy="17" r="1.8" fill="#a8c8ff" opacity="0.85"/>
+      <circle cx="0" cy="22" r="1.4" fill="#9175ff" opacity="0.75"/>
       <text x="18" y="24" fontFamily="'DM Sans',sans-serif" fontSize="11" fontWeight="600" fill="url(#lg)" textAnchor="middle" letterSpacing="-0.5">GG</text>
     </svg>
   )
@@ -81,395 +128,326 @@ function GitGyanLogo({ size = 36 }: { size?: number }) {
 // ─── STARFIELD ────────────────────────────────────────────────
 
 function Starfield() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
+  const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    let stars: { x: number; y: number; r: number; a: number; da: number }[] = []
-    let animId: number
-
-    function resize() {
-      canvas!.width = window.innerWidth
-      canvas!.height = window.innerHeight
-      stars = Array.from({ length: 140 }, () => ({
-        x: Math.random() * canvas!.width,
-        y: Math.random() * canvas!.height,
-        r: Math.random() * 1.1 + 0.2,
-        a: Math.random() * 0.5 + 0.1,
-        da: (Math.random() - 0.5) * 0.003,
+    const c = ref.current; if (!c) return
+    const ctx = c.getContext('2d')!
+    let stars: any[] = [], id: number
+    const resize = () => {
+      c.width = window.innerWidth; c.height = window.innerHeight
+      stars = Array.from({length:130}, () => ({
+        x: Math.random()*c.width, y: Math.random()*c.height,
+        r: Math.random()*1.1+0.2, a: Math.random()*0.5+0.1,
+        da: (Math.random()-0.5)*0.003,
       }))
     }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas!.width, canvas!.height)
-      for (const s of stars) {
-        s.a += s.da
-        if (s.a < 0.05 || s.a > 0.6) s.da *= -1
-        ctx.beginPath()
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(180,210,255,${s.a})`
-        ctx.fill()
+    const draw = () => {
+      ctx.clearRect(0,0,c.width,c.height)
+      for(const s of stars){
+        s.a+=s.da; if(s.a<0.05||s.a>0.6)s.da*=-1
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
+        ctx.fillStyle=`rgba(180,210,255,${s.a})`; ctx.fill()
       }
-      animId = requestAnimationFrame(draw)
+      id = requestAnimationFrame(draw)
     }
-
-    resize()
-    draw()
+    resize(); draw()
     window.addEventListener('resize', resize)
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
+    return () => { cancelAnimationFrame(id); window.removeEventListener('resize', resize) }
   }, [])
-
-  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />
+  return <canvas ref={ref} style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none'}}/>
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
-function formatStars(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-  return String(n)
+function fmtStars(n: number) { return n>=1000?`${(n/1000).toFixed(1)}k`:String(n) }
+function timeAgo(d: string) {
+  const days = Math.floor((Date.now()-new Date(d).getTime())/86400000)
+  if(days===0)return'today'; if(days===1)return'1 day ago'
+  if(days<7)return`${days} days ago`; if(days<30)return`${Math.floor(days/7)}w ago`
+  return`${Math.floor(days/30)}mo ago`
 }
 
-function timeAgo(dateStr: string): string {
-  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
-  if (days === 0) return 'today'
-  if (days === 1) return '1 day ago'
-  if (days < 7) return `${days} days ago`
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`
-  return `${Math.floor(days / 30)} months ago`
-}
-
-// ─── MAIN PAGE ────────────────────────────────────────────────
+// ─── MAIN ────────────────────────────────────────────────────
 
 export default function Home() {
   const [repos, setRepos] = useState<Repo[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
-  const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null)
-  const [aiSummary, setAiSummary] = useState<AISummary | null>(null)
+  const [selected, setSelected] = useState<Repo|null>(null)
+  const [summary, setSummary] = useState<AISummary|null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState<'stars' | 'new'>('stars')
+  const [sort, setSort] = useState<'stars'|'new'>('stars')
 
-  // ── Fetch repos (existing API — unchanged) ──
   useEffect(() => {
-    fetch('/api/repos')
-      .then(res => res.json())
-      .then(data => {
-        setRepos(data.repos || [])
-        setTotal(data.total)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    fetch('/api/repos').then(r=>r.json()).then(d=>{
+      setRepos(d.repos||[]); setTotal(d.total); setLoading(false)
+    }).catch(()=>setLoading(false))
   }, [])
 
-  // ── Handle repo click + AI summary (existing API — unchanged) ──
-  const handleRepoClick = async (repo: Repo) => {
-    setSelectedRepo(repo)
-    setAiSummary(null)
-    setAiLoading(true)
+  const handleClick = async (repo: Repo) => {
+    setSelected(repo); setSummary(null); setAiLoading(true)
     try {
       const res = await fetch('/api/summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repoId: repo.id,
-          repoName: repo.name,
-          description: repo.description,
-          language: repo.language,
-          stars: repo.stargazers_count,
-          topics: repo.topics || [],
-        }),
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({repoId:repo.id,repoName:repo.name,description:repo.description,language:repo.language,stars:repo.stargazers_count,topics:repo.topics||[]})
       })
-      setAiSummary(await res.json())
-    } catch (e) {
-      console.error('AI summary error:', e)
-    } finally {
-      setAiLoading(false)
-    }
+      setSummary(await res.json())
+    } catch(e){console.error(e)} finally{setAiLoading(false)}
   }
 
-  // ── Filter + sort ──
   const filtered = repos
-    .filter(r =>
-      !search ||
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.description?.toLowerCase().includes(search.toLowerCase()) ||
-      r.language?.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) =>
-      sortBy === 'stars'
-        ? b.stargazers_count - a.stargazers_count
-        : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
+    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase()) || r.language?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a,b) => sort==='stars' ? b.stargazers_count-a.stargazers_count : new Date(b.created_at).getTime()-new Date(a.created_at).getTime())
+
+  const S: Record<string,React.CSSProperties> = {
+    page:     {minHeight:'100vh', fontFamily:'var(--sans)', position:'relative'},
+    nav:      {position:'fixed',top:0,left:0,right:0,zIndex:100,display:'flex',alignItems:'center',padding:'0 32px',height:60,background:'rgba(6,8,15,0.88)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.1)'},
+    navLogo:  {display:'flex',alignItems:'center',gap:10,color:'#fff',fontFamily:'var(--serif)',fontSize:19,letterSpacing:'-0.3px'},
+    navLinks: {display:'flex',gap:4,marginLeft:32},
+    navLink:  {fontSize:13,color:'var(--muted)',padding:'5px 12px',borderRadius:8},
+    navRight: {marginLeft:'auto',display:'flex',gap:8,alignItems:'center'},
+    ghBtn:    {display:'flex',alignItems:'center',gap:6,fontSize:13,color:'var(--muted)',padding:'7px 16px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:'transparent'},
+    main:     {position:'relative',zIndex:1,paddingTop:80,paddingBottom:60,maxWidth:1200,margin:'0 auto',padding:'80px 32px 60px'},
+    eyebrow:  {display:'inline-flex',alignItems:'center',gap:8,fontFamily:'var(--mono)',fontSize:11,color:'var(--accent)',letterSpacing:'0.12em',textTransform:'uppercase',padding:'5px 14px',border:'1px solid rgba(91,158,255,0.3)',borderRadius:100,background:'rgba(91,158,255,0.08)',marginBottom:24},
+    eyeDot:   {width:6,height:6,borderRadius:'50%',background:'var(--accent)'},
+    h1:       {fontFamily:'var(--serif)',fontSize:'clamp(40px,5vw,64px)',lineHeight:1.08,letterSpacing:'-1px',marginBottom:20,background:'linear-gradient(160deg,#fff 50%,rgba(180,205,255,0.8) 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'},
+    h1em:     {fontStyle:'italic',background:'linear-gradient(135deg,#5b9eff,#9175ff)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'},
+    sub:      {fontSize:17,color:'var(--muted)',lineHeight:1.7,maxWidth:480,marginBottom:28},
+    statsRow: {display:'flex',gap:10,flexWrap:'wrap' as const,marginBottom:24},
+    statPill: {display:'flex',alignItems:'center',gap:8,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:'7px 14px',fontFamily:'var(--mono)',fontSize:11},
+    statDot:  {width:6,height:6,borderRadius:'50%',flexShrink:0},
+    statVal:  {color:'#fff',fontWeight:500},
+    statLbl:  {color:'var(--muted2)'},
+    toolRow:  {display:'flex',gap:10,alignItems:'center',flexWrap:'wrap' as const,marginBottom:24},
+    searchWrap:{position:'relative',flex:1,minWidth:240,maxWidth:440},
+    searchIcon:{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--muted2)',pointerEvents:'none' as const},
+    searchIn: {width:'100%',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:'10px 16px 10px 40px',fontSize:14,color:'var(--text)',transition:'border-color 0.2s'},
+    sortRow:  {display:'flex',gap:6},
+    sortBtn:  (active:boolean):React.CSSProperties => ({fontFamily:'var(--mono)',fontSize:11,padding:'6px 14px',borderRadius:100,border:`1px solid ${active?'rgba(91,158,255,0.4)':'rgba(255,255,255,0.11)'}`,background:active?'rgba(91,158,255,0.12)':'transparent',color:active?'var(--accent)':'var(--muted)'}),
+    repoCount:{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)',marginLeft:'auto'},
+    content:  {display:'flex',gap:20,alignItems:'flex-start'},
+    list:     {flex:1,display:'flex',flexDirection:'column' as const},
+    row:      (i:number,total:number,sel:boolean):React.CSSProperties => ({
+      display:'flex',alignItems:'flex-start',gap:14,padding:'16px 20px',
+      background: sel?'#111827':'#0c1120',
+      border:'1px solid',
+      borderColor: sel?'rgba(91,158,255,0.25)':'rgba(255,255,255,0.11)',
+      borderLeft: `3px solid ${sel?'#5b9eff':'transparent'}`,
+      borderTop: i===0?undefined:'none',
+      borderRadius: i===0?'14px 14px 0 0': i===total-1?'0 0 14px 14px':'0',
+      cursor:'pointer',
+    }),
+    rank:     {fontFamily:'var(--mono)',fontSize:16,color:'rgba(255,255,255,0.12)',minWidth:32,paddingTop:2},
+    info:     {flex:1,minWidth:0},
+    nameRow:  {display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' as const,marginBottom:4},
+    org:      {fontSize:15,fontWeight:600,color:'var(--muted)'},
+    name:     {fontSize:15,fontWeight:600,color:'#fff'},
+    badge:    (color:string,bg:string,border:string):React.CSSProperties => ({fontFamily:'var(--mono)',fontSize:10,padding:'2px 8px',borderRadius:100,color,background:bg,border:`1px solid ${border}`}),
+    desc:     {fontSize:13,color:'var(--muted)',lineHeight:1.5,marginBottom:8,overflow:'hidden',whiteSpace:'nowrap' as const,textOverflow:'ellipsis'},
+    metaRow:  {display:'flex',alignItems:'center',gap:12,flexWrap:'wrap' as const},
+    meta:     {fontFamily:'var(--mono)',fontSize:12,color:'var(--muted)'},
+    metaAge:  {fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)'},
+    langDot:  (color:string):React.CSSProperties => ({width:7,height:7,borderRadius:'50%',background:color,display:'inline-block',marginRight:4}),
+    arrow:    (sel:boolean):React.CSSProperties => ({fontSize:18,color:sel?'var(--accent)':'rgba(255,255,255,0.15)',flexShrink:0,marginTop:2}),
+
+    // AI panel
+    panel:    {width:300,flexShrink:0,position:'sticky' as const,top:80},
+    panelBox: {background:'var(--bg2)',border:'1px solid rgba(91,158,255,0.25)',borderRadius:14,padding:20},
+    panelHdr: {display:'flex',alignItems:'center',gap:8,marginBottom:16,paddingBottom:14,borderBottom:'1px solid rgba(255,255,255,0.07)'},
+    aiIcon:   {width:22,height:22,borderRadius:6,background:'rgba(167,139,250,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0},
+    aiLabel:  {fontFamily:'var(--mono)',fontSize:10,color:'#a78bfa',letterSpacing:'0.06em'},
+    panelName:{fontSize:14,fontWeight:600,color:'#fff',marginBottom:2},
+    panelOrg: {fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)',marginBottom:16},
+    catBadge: {display:'inline-block',fontFamily:'var(--mono)',fontSize:10,background:'rgba(79,142,247,0.1)',color:'var(--accent)',border:'1px solid rgba(79,142,247,0.2)',padding:'2px 8px',borderRadius:100,marginBottom:14},
+    secLabel: {fontFamily:'var(--mono)',fontSize:9,color:'var(--muted2)',letterSpacing:'0.12em',marginBottom:6},
+    oneLiner: {fontSize:13,color:'#fff',fontWeight:600,lineHeight:1.5,fontStyle:'italic',borderLeft:'2px solid rgba(167,139,250,0.4)',paddingLeft:10,marginBottom:14},
+    bodyText: {fontSize:12,color:'var(--muted)',lineHeight:1.6,marginBottom:14},
+    viewBtn:  {width:'100%',textAlign:'center' as const,background:'rgba(91,158,255,0.1)',color:'var(--accent)',fontSize:12,fontFamily:'var(--mono)',padding:'10px 16px',borderRadius:9,border:'1px solid rgba(91,158,255,0.2)',marginTop:8},
+    loading:  {fontFamily:'var(--mono)',fontSize:12,color:'var(--accent)'},
+    footer:   {position:'relative',zIndex:1,borderTop:'1px solid rgba(255,255,255,0.07)',padding:'28px 32px',marginTop:20},
+    footInner:{maxWidth:1200,margin:'0 auto',display:'flex',alignItems:'center',gap:16,flexWrap:'wrap' as const},
+    footLogo: {display:'flex',alignItems:'center',gap:8,color:'#fff',fontFamily:'var(--serif)',fontSize:16},
+    footLinks:{display:'flex',gap:4,marginLeft:'auto'},
+    footLink: {fontSize:13,color:'var(--muted2)',padding:'3px 10px',borderRadius:6},
+    footCopy: {fontSize:12,color:'rgba(255,255,255,0.2)',fontFamily:'var(--mono)',marginLeft:12},
+  }
 
   return (
-    <div className="relative min-h-screen font-[family-name:var(--font-sans)]">
+    <div style={S.page}>
+      <style>{css}</style>
       <Starfield />
 
-      {/* ── NAV ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center px-8 h-[60px] bg-[rgba(6,8,15,0.85)] backdrop-blur-xl border-b border-white/10">
-        <a href="/" className="flex items-center gap-2.5 no-underline">
-          <GitGyanLogo size={34} />
-          <span className="font-[family-name:var(--font-serif)] text-[19px] text-white tracking-[-0.3px]">
-            GitGyan
-          </span>
-        </a>
-        <div className="flex gap-1 ml-8">
-          {['Trending', 'Languages', 'Topics', 'Insights'].map(link => (
-            <a key={link} href="#"
-              className="text-[13px] text-white/50 no-underline px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-all">
-              {link}
-            </a>
+      {/* NAV */}
+      <nav style={S.nav}>
+        <a href="/" style={S.navLogo}><Logo size={32}/> GitGyan</a>
+        <div style={S.navLinks}>
+          {['Trending','Languages','Topics','Insights'].map(l=>(
+            <a key={l} href="#" className="nav-link" style={S.navLink}>{l}</a>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <a href="https://github.com/abiprivacylab/gitgyan" target="_blank"
-            className="flex items-center gap-1.5 text-[13px] text-white/50 px-4 py-2 rounded-[9px] border border-white/20 hover:text-white hover:border-white/30 transition-all no-underline">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-            </svg>
+        <div style={S.navRight}>
+          <a href="https://github.com/abiprivacylab/gitgyan" target="_blank" className="gh-btn" style={S.ghBtn}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             Star on GitHub
           </a>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="relative z-10 pt-[100px] pb-12 px-8 max-w-[1200px] mx-auto">
-        <div className="inline-flex items-center gap-2 font-[family-name:var(--font-mono)] text-[11px] text-[#5b9eff] tracking-[0.12em] uppercase px-3 py-1.5 border border-[rgba(79,142,247,0.3)] rounded-full bg-[rgba(79,142,247,0.08)] mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#5b9eff] animate-pulse" />
+      {/* MAIN */}
+      <div style={S.main}>
+
+        {/* HERO */}
+        <div style={S.eyebrow}>
+          <span className="pulse" style={S.eyeDot}/>
           AI-Powered GitHub Discovery
         </div>
 
-        <h1 className="font-[family-name:var(--font-serif)] text-[clamp(40px,5vw,64px)] leading-[1.08] tracking-[-1px] mb-5"
-          style={{ background: 'linear-gradient(160deg,#fff 50%,rgba(180,205,255,0.8) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-          Where Developers<br />
-          <em className="not-italic"
-            style={{ background: 'linear-gradient(135deg,#5b9eff,#9175ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Find Wisdom.
-          </em>
+        <h1 style={S.h1}>
+          Where Developers<br/>
+          <em style={S.h1em}>Find Wisdom.</em>
         </h1>
 
-        <p className="text-[17px] text-white/60 leading-[1.7] max-w-[480px] mb-8">
+        <p style={S.sub}>
           GitGyan scans GitHub daily, finds high-signal repos, and analyzes them with AI —
           ranked before they go viral.
         </p>
 
-        {/* Stats strip */}
+        {/* Stats */}
         {!loading && (
-          <div className="flex gap-3 flex-wrap mb-8">
-            {[
-              { dot: '#4ade9e', val: repos.length, label: 'high-signal repos today' },
-              { dot: '#fcd34d', val: total.toLocaleString(), label: 'repos scanned' },
-              { dot: '#a78bfa', val: repos.filter(r => r.topics?.length > 0).length, label: 'AI summaries ready' },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-2 bg-[#0c1120] border border-white/10 rounded-lg px-3 py-1.5 font-[family-name:var(--font-mono)] text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.dot }} />
-                <span className="text-white font-medium">{s.val}</span>
-                <span className="text-white/35">{s.label}</span>
-              </div>
-            ))}
+          <div style={S.statsRow}>
+            <div style={S.statPill}>
+              <span className="pulse" style={{...S.statDot,background:'#4ade9e'}}/>
+              <span style={S.statVal}>{repos.length}</span>
+              <span style={S.statLbl}>high-signal repos today</span>
+            </div>
+            <div style={S.statPill}>
+              <span style={{...S.statDot,background:'#fcd34d'}}/>
+              <span style={S.statVal}>{total.toLocaleString()}</span>
+              <span style={S.statLbl}>repos scanned</span>
+            </div>
+            <div style={S.statPill}>
+              <span style={{...S.statDot,background:'#a78bfa'}}/>
+              <span style={S.statVal}>{repos.filter(r=>r.topics?.length>0).length}</span>
+              <span style={S.statLbl}>AI summaries ready</span>
+            </div>
           </div>
         )}
 
-        {/* Search + sort */}
-        <div className="flex gap-3 items-center flex-wrap mb-8">
-          <div className="relative flex-1 min-w-[240px] max-w-[440px]">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="9" r="6" /><path d="M15 15l3 3" />
+        {/* Search + Sort */}
+        <div style={S.toolRow}>
+          <div style={S.searchWrap}>
+            <svg style={S.searchIcon} width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="9" cy="9" r="6"/><path d="M15 15l3 3"/>
             </svg>
             <input
+              className="search-input"
+              style={S.searchIn}
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e=>setSearch(e.target.value)}
               placeholder="Search repos, topics, or languages…"
-              className="w-full bg-[#0c1120] border border-white/10 rounded-[10px] py-2.5 pl-10 pr-4 text-[14px] text-white placeholder-white/30 outline-none focus:border-[rgba(91,158,255,0.4)] transition-colors"
             />
           </div>
-          <div className="flex gap-1.5">
-            {[['stars', '★ Stars'], ['new', '✦ Newest']].map(([val, label]) => (
-              <button key={val}
-                onClick={() => setSortBy(val as 'stars' | 'new')}
-                className={`font-[family-name:var(--font-mono)] text-[11px] px-3 py-2 rounded-full border transition-all ${sortBy === val ? 'bg-[rgba(91,158,255,0.12)] border-[rgba(91,158,255,0.4)] text-[#5b9eff]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/20'}`}>
-                {label}
-              </button>
+          <div style={S.sortRow}>
+            {([['stars','★ Stars'],['new','✦ Newest']] as const).map(([v,l])=>(
+              <button key={v} className="sort-btn" style={S.sortBtn(sort===v)} onClick={()=>setSort(v)}>{l}</button>
             ))}
           </div>
-          <span className="font-[family-name:var(--font-mono)] text-[11px] text-white/30 ml-auto">
-            {filtered.length} repos
-          </span>
+          <span style={S.repoCount}>{filtered.length} repos</span>
         </div>
-      </section>
 
-      {/* ── MAIN CONTENT ── */}
-      <section className="relative z-10 px-8 pb-20 max-w-[1200px] mx-auto">
-
+        {/* Loading */}
         {loading && (
-          <div className="text-center text-white/30 font-[family-name:var(--font-mono)] text-[13px] py-20 animate-pulse">
-            ✦ Scanning the universe…
+          <div style={{textAlign:'center',padding:'60px 0',fontFamily:'var(--mono)',fontSize:13,color:'var(--muted2)'}}>
+            <div style={{display:'inline-block',width:16,height:16,border:'1.5px solid rgba(91,158,255,0.3)',borderTopColor:'var(--accent)',borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} className="spin"/>
+            Scanning the universe…
           </div>
         )}
 
+        {/* Content */}
         {!loading && (
-          <div className="flex gap-6 items-start">
+          <div style={S.content}>
 
-            {/* ── REPO LIST ── */}
-            <div className="flex-1 flex flex-col">
-              {filtered.map((repo, i) => {
-                const color = langColors[repo.language] ?? '#5b9eff'
-                const isSelected = selectedRepo?.id === repo.id
+            {/* Repo list */}
+            <div style={S.list}>
+              {filtered.map((repo,i) => {
+                const color = langColors[repo.language]??'#5b9eff'
+                const sel = selected?.id===repo.id
+                const isNew = Math.floor((Date.now()-new Date(repo.created_at).getTime())/86400000)<=7
                 return (
-                  <div key={repo.id}
-                    onClick={() => handleRepoClick(repo)}
-                    className={`flex items-start gap-4 px-5 py-4 border-b cursor-pointer transition-all ${
-                      i === 0 ? 'rounded-t-[14px] border border-b-0' : ''
-                    } ${
-                      i === filtered.length - 1 ? 'rounded-b-[14px] border-t-0 border' : 'border-x'
-                    } ${
-                      isSelected
-                        ? 'bg-[#111827] border-[rgba(91,158,255,0.25)] border-l-[3px] border-l-[#5b9eff]'
-                        : 'bg-[#0c1120] border-white/10 border-l-[3px] border-l-transparent hover:bg-[#111827] hover:border-l-[#5b9eff]'
-                    }`}
-                    style={{ position: 'relative', zIndex: isSelected ? 1 : 0 }}
-                  >
-                    {/* Rank */}
-                    <div className="font-[family-name:var(--font-mono)] text-[16px] text-white/12 min-w-[32px] pt-0.5">
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-[15px] font-semibold text-white/50">{repo.owner.login} /</span>
-                        <span className="text-[15px] font-semibold text-white">{repo.name}</span>
-                        {/* Badges */}
-                        {repo.topics?.length > 0 && (
-                          <span className="font-[family-name:var(--font-mono)] text-[10px] px-2 py-0.5 rounded-full border text-[#a78bfa] border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.08)]">
-                            ✦ AI ready
-                          </span>
-                        )}
-                        {(() => {
-                          const days = Math.floor((Date.now() - new Date(repo.created_at).getTime()) / 86400000)
-                          return days <= 7 ? (
-                            <span className="font-[family-name:var(--font-mono)] text-[10px] px-2 py-0.5 rounded-full border text-[#4ade9e] border-[rgba(74,222,158,0.3)] bg-[rgba(74,222,158,0.08)]">
-                              ✦ new
-                            </span>
-                          ) : null
-                        })()}
+                  <div key={repo.id} className="repo-row" style={S.row(i,filtered.length,sel)} onClick={()=>handleClick(repo)}>
+                    <div style={S.rank}>{String(i+1).padStart(2,'0')}</div>
+                    <div style={S.info}>
+                      <div style={S.nameRow}>
+                        <span style={S.org}>{repo.owner.login} /</span>
+                        <span style={S.name}>{repo.name}</span>
+                        {repo.topics?.length>0 && <span style={S.badge('#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')}>✦ AI ready</span>}
+                        {isNew && <span style={S.badge('#4ade9e','rgba(74,222,158,0.08)','rgba(74,222,158,0.3)')}>✦ new</span>}
                       </div>
-
-                      <p className="text-[13px] text-white/50 leading-[1.5] mb-2 line-clamp-1">
-                        {repo.description || 'No description provided'}
-                      </p>
-
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-[family-name:var(--font-mono)] text-[12px] text-white/50">
-                          ★ {formatStars(repo.stargazers_count)}
-                        </span>
+                      <div style={S.desc}>{repo.description||'No description provided'}</div>
+                      <div style={S.metaRow}>
+                        <span style={S.meta}>★ {fmtStars(repo.stargazers_count)}</span>
                         {repo.language && (
-                          <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-[12px] text-white/50">
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                            {repo.language}
+                          <span style={S.meta}>
+                            <span style={S.langDot(color)}/>{repo.language}
                           </span>
                         )}
-                        <span className="font-[family-name:var(--font-mono)] text-[11px] text-white/30">
-                          · {timeAgo(repo.created_at)}
-                        </span>
+                        <span style={S.metaAge}>· {timeAgo(repo.created_at)}</span>
                       </div>
                     </div>
-
-                    {/* Arrow */}
-                    <div className={`text-[18px] mt-1 transition-colors flex-shrink-0 ${isSelected ? 'text-[#5b9eff]' : 'text-white/15'}`}>
-                      {isSelected ? '✦' : '›'}
-                    </div>
+                    <div style={S.arrow(sel)}>{sel?'✦':'›'}</div>
                   </div>
                 )
               })}
             </div>
 
-            {/* ── AI SUMMARY PANEL ── */}
-            {selectedRepo && (
-              <div className="w-[300px] flex-shrink-0 sticky top-[80px]">
-                <div className="bg-[#0c1120] border border-[rgba(91,158,255,0.25)] rounded-[14px] p-5">
-
-                  {/* Header */}
-                  <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/08">
-                    <div className="w-[22px] h-[22px] rounded-[6px] bg-[rgba(167,139,250,0.15)] flex items-center justify-center text-[11px]">✦</div>
-                    <span className="font-[family-name:var(--font-mono)] text-[10px] text-[#a78bfa] tracking-[0.06em]">AI SUMMARY · CLAUDE HAIKU</span>
+            {/* AI Panel */}
+            {selected && (
+              <div style={S.panel}>
+                <div style={S.panelBox}>
+                  <div style={S.panelHdr}>
+                    <div style={S.aiIcon}>✦</div>
+                    <span style={S.aiLabel}>AI SUMMARY · CLAUDE HAIKU</span>
                   </div>
-
-                  <h3 className="text-white font-semibold text-[14px] mb-0.5">{selectedRepo.name}</h3>
-                  <p className="font-[family-name:var(--font-mono)] text-[11px] text-white/40 mb-4">
-                    by {selectedRepo.owner.login}
-                  </p>
+                  <div style={S.panelName}>{selected.name}</div>
+                  <div style={S.panelOrg}>by {selected.owner.login}</div>
 
                   {aiLoading && (
-                    <div className="font-[family-name:var(--font-mono)] text-[12px] text-[#5b9eff] animate-pulse">
-                      Generating summary…
-                    </div>
+                    <div style={S.loading} className="pulse">Generating summary…</div>
                   )}
 
-                  {aiSummary && !aiLoading && (
-                    <div className="space-y-4">
-                      {aiSummary.category && (
-                        <span className="inline-block font-[family-name:var(--font-mono)] text-[10px] bg-[rgba(79,142,247,0.1)] text-[#5b9eff] border border-[rgba(79,142,247,0.2)] px-2 py-0.5 rounded-full">
-                          {aiSummary.category}
-                        </span>
-                      )}
-
-                      <div>
-                        <p className="font-[family-name:var(--font-mono)] text-[9px] text-white/30 tracking-[0.12em] mb-1.5">ONE LINER</p>
-                        <p className="text-white font-semibold text-[13px] leading-[1.5] border-l-2 border-[rgba(167,139,250,0.4)] pl-3 italic">
-                          {aiSummary.oneLiner}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="font-[family-name:var(--font-mono)] text-[9px] text-white/30 tracking-[0.12em] mb-1.5">WHY IT MATTERS</p>
-                        <p className="text-white/65 text-[12px] leading-[1.6]">{aiSummary.whyItMatters}</p>
-                      </div>
-
-                      <div>
-                        <p className="font-[family-name:var(--font-mono)] text-[9px] text-white/30 tracking-[0.12em] mb-1.5">WHO SHOULD CARE</p>
-                        <p className="text-white/50 text-[12px] leading-[1.6]">{aiSummary.whoShouldCare}</p>
-                      </div>
-
-                      {aiSummary.cached && (
-                        <p className="font-[family-name:var(--font-mono)] text-[10px] text-white/20">· cached summary</p>
-                      )}
-
-                      <button
-                        onClick={() => window.open(selectedRepo.html_url, '_blank')}
-                        className="w-full text-center bg-[rgba(91,158,255,0.1)] hover:bg-[rgba(91,158,255,0.18)] text-[#5b9eff] text-[12px] font-[family-name:var(--font-mono)] py-2.5 px-4 rounded-[9px] border border-[rgba(91,158,255,0.2)] transition-all cursor-pointer mt-2">
+                  {summary && !aiLoading && (
+                    <>
+                      {summary.category && <div style={S.catBadge}>{summary.category}</div>}
+                      <div style={S.secLabel}>ONE LINER</div>
+                      <div style={S.oneLiner}>{summary.oneLiner}</div>
+                      <div style={S.secLabel}>WHY IT MATTERS</div>
+                      <div style={S.bodyText}>{summary.whyItMatters}</div>
+                      <div style={S.secLabel}>WHO SHOULD CARE</div>
+                      <div style={{...S.bodyText,marginBottom:0}}>{summary.whoShouldCare}</div>
+                      {summary.cached && <div style={{fontFamily:'var(--mono)',fontSize:10,color:'rgba(255,255,255,0.2)',marginTop:8}}>· cached summary</div>}
+                      <button className="gh-btn" style={S.viewBtn} onClick={()=>window.open(selected.html_url,'_blank')}>
                         View on GitHub →
                       </button>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
             )}
-
           </div>
         )}
-      </section>
+      </div>
 
-      {/* ── FOOTER ── */}
-      <footer className="relative z-10 border-t border-white/08 py-8 px-8">
-        <div className="max-w-[1200px] mx-auto flex items-center gap-4 flex-wrap">
-          <a href="/" className="flex items-center gap-2 no-underline">
-            <GitGyanLogo size={22} />
-            <span className="font-[family-name:var(--font-serif)] text-[16px] text-white">GitGyan</span>
-          </a>
-          <div className="flex gap-1 ml-auto">
-            {['About', 'Contact', 'Privacy', 'Terms'].map(l => (
-              <a key={l} href="#" className="text-[13px] text-white/35 no-underline px-3 py-1 rounded-md hover:text-white/70 transition-colors">
-                {l}
-              </a>
+      {/* FOOTER */}
+      <footer style={S.footer}>
+        <div style={S.footInner}>
+          <a href="/" style={S.footLogo}><Logo size={22}/> GitGyan</a>
+          <div style={S.footLinks}>
+            {['About','Contact','Privacy','Terms'].map(l=>(
+              <a key={l} href="#" style={S.footLink} className="nav-link">{l}</a>
             ))}
           </div>
-          <p className="text-[12px] text-white/25 font-[family-name:var(--font-mono)] ml-4">
-            © 2026 GitGyan — Where Developers Find Wisdom
-          </p>
+          <span style={S.footCopy}>© 2026 GitGyan — Where Developers Find Wisdom</span>
         </div>
       </footer>
     </div>
