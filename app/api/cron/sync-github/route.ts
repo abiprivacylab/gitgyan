@@ -2,33 +2,167 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // ─── DAILY GITHUB SYNC ────────────────────────────────────────
-// Runs once daily via Vercel Cron (see vercel.json)
-// Schedule: 2am UTC every day
 //
-// Add to vercel.json:
-// {
-//   "crons": [
-//     { "path": "/api/cron/sync-github", "schedule": "0 2 * * *" }
-//   ]
-// }
+// Route:    GET /api/cron/sync-github
+// Schedule: 2am UTC daily (configured in vercel.json)
+// Security: Protected by CRON_SECRET environment variable
 //
-// Protected by CRON_SECRET env variable
+// What this does every night:
+//   1. Fetches top 100 repos per programming language
+//   2. Fetches top 100 repos per AI topic
+//   3. Upserts everything into Supabase repos table
+//   4. Updates daily_stats with total counts
+//
+// To add a new language: add it to LANGUAGES array below
+// To add a new AI topic: add it to AI_TOPICS array below
+// ─────────────────────────────────────────────────────────────
 
+// ── Programming languages to track ──────────────────────────
+// Add any language here and it will be tracked from next sync
 const LANGUAGES = [
-  'Rust', 'Python', 'TypeScript', 'JavaScript',
-  'Go', 'C++', 'Swift', 'Kotlin', 'Java', 'C',
+  'Rust',
+  'Python',
+  'TypeScript',
+  'JavaScript',
+  'Go',
+  'C++',
+  'Swift',
+  'Kotlin',
+  'Java',
+  'C',
+  // Add more languages here anytime:
+  // 'Ruby',
+  // 'Zig',
+  // 'Elixir',
+  // 'Dart',
+  // 'Solidity',
 ]
 
+// ── AI / Hot topics to track ─────────────────────────────────
+// These capture the AI wave regardless of language
+// Stars threshold is lower (>5) to catch emerging projects early
+const AI_TOPICS = [
+  'topic:llm',
+  'topic:claude',
+  'topic:mcp',
+  'topic:ai-agent',
+  'topic:openai',
+  'topic:langchain',
+  'topic:rag',
+  'topic:vibe-coding',
+  'topic:cursor',
+  'topic:ollama',
+  'topic:anthropic',
+  'topic:gemini',
+  'topic:deepseek',
+  // Add new hot topics here anytime:
+  // 'topic:mcp-server',
+  // 'topic:local-llm',
+]
+
+// ── Shared GitHub API headers ─────────────────────────────────
+function githubHeaders(token: string | undefined) {
+  return {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github.v3+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  }
+}
+
+// ── Upsert a single repo into Supabase ───────────────────────
+// Uses your actual schema column names
+async function upsertRepo(repo: any): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from('repos')
+    .upsert({
+      github_id:         repo.id,
+      name:              repo.name,
+      full_name:         repo.full_name,
+      description:       repo.description,
+      language:          repo.language,
+      stars:             repo.stargazers_count,
+      forks:             repo.forks_count,
+      watchers:          repo.watchers_count,
+      open_issues:       repo.open_issues_count,
+      github_url:        repo.html_url,
+      topics:            repo.topics || [],
+      owner_login:       repo.owner?.login,
+      github_created_at: repo.created_at,
+      github_updated_at: repo.updated_at,
+      fetch_status:      'complete',
+      last_fetched_at:   new Date().toISOString(),
+    }, {
+      onConflict: 'github_id',
+    })
+
+  if (error) {
+    console.error(`  ✗ ${repo.full_name}:`, error.message)
+    return false
+  }
+  return true
+}
+
+// ── Fetch repos from GitHub and save to Supabase ─────────────
+// Reusable for both language and topic queries
+async function fetchAndSave(
+  query: string,
+  token: string | undefined,
+  label: string
+): Promise<{ synced: number; failed: number }> {
+  let synced = 0
+  let failed = 0
+
+  try {
+    console.log(`\nFetching ${label}...`)
+
+    const res = await fetch(
+      `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=100`,
+      { headers: githubHeaders(token) }
+    )
+
+    if (!res.ok) {
+      console.error(`  ✗ GitHub API error ${res.status} for: ${label}`)
+      return { synced: 0, failed: 1 }
+    }
+
+    const data = await res.json()
+    const repos = data.items || []
+    console.log(`  Found ${repos.length} repos`)
+
+    // Save each repo to Supabase
+    for (const repo of repos) {
+      const ok = await upsertRepo(repo)
+      if (ok) synced++
+      else failed++
+    }
+
+    console.log(`  ✓ ${synced} saved, ${failed} failed`)
+
+  } catch (err: any) {
+    console.error(`  ✗ ${label} crashed:`, err.message)
+    failed++
+  }
+
+  // Rate limit: GitHub allows 30 search req/min
+  // 2.5s delay keeps us well under the limit
+  await new Promise(resolve => setTimeout(resolve, 2500))
+
+  return { synced, failed }
+}
+
+// ─── MAIN HANDLER ─────────────────────────────────────────────
 export async function GET(request: Request) {
 
-  // ── Security check ──
+  // ── Security: only Vercel cron can call this ──
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const token  = process.env.GITHUB_TOKEN
-  const today  = new Date().toISOString().split('T')[0]
+  const token = process.env.GITHUB_TOKEN
+  const today = new Date().toISOString().split('T')[0]
+
+  // Look back 7 days for repos created in this window
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   const fromDate = sevenDaysAgo.toISOString().split('T')[0]
@@ -36,122 +170,77 @@ export async function GET(request: Request) {
   let totalSynced = 0
   let totalFailed = 0
 
-  console.log(`\n🔭 GitGyan daily sync — ${today}`)
+  console.log(`\n🔭 GitGyan daily sync starting — ${today}`)
+  console.log(`   Looking for repos created since: ${fromDate}`)
+
+  // ── PHASE 1: Sync by programming language ────────────────
+  // Each language gets its own API call fetching top 100 repos
+  console.log(`\n── Phase 1: Languages (${LANGUAGES.length} languages × 100 repos) ──`)
 
   for (const language of LANGUAGES) {
-    console.log(`\nFetching ${language}...`)
-
-    try {
-      // Search GitHub for trending repos in this language
-      const q = `created:>=${fromDate} language:${language} stars:>10`
-      const res = await fetch(
-        `https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=30`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/vnd.github.v3+json',
-            'X-GitHub-Api-Version': '2022-11-28',
-          },
-        }
-      )
-
-      if (!res.ok) {
-        console.error(`GitHub API error for ${language}: ${res.status}`)
-        totalFailed++
-        continue
-      }
-
-      const data = await res.json()
-      const repos = data.items || []
-      console.log(`  Found ${repos.length} repos`)
-
-      for (const repo of repos) {
-        // ── Upsert repo using YOUR schema ──
-        const { error } = await supabaseAdmin
-          .from('repos')
-          .upsert({
-            github_id:          repo.id,
-            name:               repo.name,
-            full_name:          repo.full_name,
-            description:        repo.description,
-            language:           repo.language,
-            stars:              repo.stargazers_count,
-            forks:              repo.forks_count,
-            watchers:           repo.watchers_count,
-            open_issues:        repo.open_issues_count,
-            github_url:         repo.html_url,
-            topics:             repo.topics || [],
-            owner_login:        repo.owner?.login,
-            github_created_at:  repo.created_at,
-            github_updated_at:  repo.updated_at,
-            fetch_status:       'complete',
-            last_fetched_at:    new Date().toISOString(),
-          }, {
-            onConflict: 'github_id',
-          })
-
-        if (error) {
-          console.error(`  ✗ ${repo.full_name}:`, error.message)
-          totalFailed++
-        } else {
-          totalSynced++
-        }
-      }
-
-      // GitHub search API allows 30 req/min — stay safe
-      await new Promise(resolve => setTimeout(resolve, 2500))
-
-    } catch (err: any) {
-      console.error(`  ✗ ${language} failed:`, err.message)
-      totalFailed++
-    }
+    const query = `created:>=${fromDate} language:${language} stars:>10`
+    const { synced, failed } = await fetchAndSave(query, token, `language:${language}`)
+    totalSynced += synced
+    totalFailed += failed
   }
 
-  // ── Also fetch general trending (no language filter) ──
+  // ── PHASE 2: Sync by AI topic ─────────────────────────────
+  // Lower star threshold (>5) to catch emerging AI projects early
+  console.log(`\n── Phase 2: AI Topics (${AI_TOPICS.length} topics × 100 repos) ──`)
+
+  for (const topic of AI_TOPICS) {
+    const query = `created:>=${fromDate} ${topic} stars:>5`
+    const { synced, failed } = await fetchAndSave(query, token, topic)
+    totalSynced += synced
+    totalFailed += failed
+  }
+
+  // ── PHASE 3: Update daily stats ───────────────────────────
+  // Fetch overall GitHub stats for the dashboard counters
+  console.log(`\n── Phase 3: Updating daily stats ──`)
+
   try {
-    const fromDate1 = new Date()
-    fromDate1.setDate(fromDate1.getDate() - 1)
-    const yesterday = fromDate1.toISOString().split('T')[0]
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
 
     const res = await fetch(
-      `https://api.github.com/search/repositories?q=created:>=${yesterday}+stars:>50&sort=stars&order=desc&per_page=50`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      }
+      `https://api.github.com/search/repositories?q=created:>=${yesterdayStr}+stars:>5&sort=stars&order=desc&per_page=1`,
+      { headers: githubHeaders(token) }
     )
 
     if (res.ok) {
       const data = await res.json()
-      const repos = data.items || []
 
-      // Update daily_stats with today's total
       await supabaseAdmin
         .from('daily_stats')
         .upsert({
-          date:                  today,
-          total_repos_scanned:   data.total_count,
-          avg_stars_top15:       repos.slice(0, 15).reduce(
-            (sum: number, r: any) => sum + r.stargazers_count, 0
-          ) / Math.min(repos.length, 15),
+          date:                today,
+          total_repos_scanned: data.total_count,
+          avg_stars_top15:     totalSynced > 0 ? totalSynced / LANGUAGES.length : 0,
         }, {
           onConflict: 'date',
         })
 
-      console.log(`\n✓ Daily stats updated — ${data.total_count} total repos scanned`)
+      console.log(`  ✓ Daily stats updated — ${data.total_count.toLocaleString()} total repos on GitHub today`)
     }
   } catch (err: any) {
-    console.error('Daily stats update failed:', err.message)
+    console.error('  ✗ Daily stats update failed:', err.message)
   }
 
-  console.log(`\n✅ Sync complete — ${totalSynced} synced, ${totalFailed} failed`)
+  // ── DONE ──────────────────────────────────────────────────
+  console.log(`\n✅ GitGyan sync complete!`)
+  console.log(`   ✓ Synced:  ${totalSynced} repos`)
+  console.log(`   ✗ Failed:  ${totalFailed} repos`)
+  console.log(`   📅 Date:   ${today}`)
 
   return NextResponse.json({
     success: true,
     date:    today,
     synced:  totalSynced,
     failed:  totalFailed,
+    languages: LANGUAGES.length,
+    aiTopics:  AI_TOPICS.length,
+    message: `Synced ${totalSynced} repos across ${LANGUAGES.length} languages and ${AI_TOPICS.length} AI topics`,
   })
 }
