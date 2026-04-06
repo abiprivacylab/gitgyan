@@ -1,8 +1,7 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/sync-github",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
