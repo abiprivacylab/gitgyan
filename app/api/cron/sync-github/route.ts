@@ -228,19 +228,136 @@ export async function GET(request: Request) {
     console.error('  ✗ Daily stats update failed:', err.message)
   }
 
+  // ── PHASE 4: Viral detection on existing repos ───────────
+  //
+  // Smart approach — no external API needed for most of this:
+  // 1. Pull all repos from OUR database created in last 1 year
+  // 2. Fetch their CURRENT star count from GitHub
+  // 3. Compare with stored star count
+  // 4. If delta > threshold → repo is going viral → create alert
+  // 5. Update stored star count with latest
+  //
+  // Why 1 year limit?
+  // - Repos older than 1 year rarely go viral suddenly
+  // - Keeps the check fast and API calls manageable
+  // - You can adjust this window anytime
+  //
+  // Viral threshold: gained 3x their stored stars overnight
+  // Example: stored=500, current=1800 → delta=1300 → VIRAL 🔥
+
+  console.log(`\n── Phase 4: Viral detection on existing repos ──`)
+
+  let viralDetected = 0
+
+  try {
+    // ── Step 1: Get all repos from our DB created in last 1 year ──
+    const oneYearAgo = new Date()
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+    const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]
+
+    const { data: existingRepos, error: fetchError } = await supabaseAdmin
+      .from('repos')
+      .select('github_id, full_name, github_url, stars, github_created_at')
+      .gte('github_created_at', oneYearAgoStr)
+      .order('stars', { ascending: false })
+
+    if (fetchError) {
+      console.error('  ✗ Could not fetch existing repos:', fetchError.message)
+    } else {
+      console.log(`  Checking ${existingRepos?.length ?? 0} repos created in last 1 year...`)
+
+      // ── Step 2: Check in batches of 10 to avoid rate limits ──
+      // GitHub doesn't have a bulk stars endpoint so we check
+      // each repo individually but batch them to stay efficient
+      const repos = existingRepos ?? []
+      const BATCH_SIZE = 10
+
+      for (let i = 0; i < repos.length; i += BATCH_SIZE) {
+        const batch = repos.slice(i, i + BATCH_SIZE)
+
+        await Promise.all(batch.map(async (repo) => {
+          try {
+            // ── Step 3: Fetch current star count from GitHub ──
+            const res = await fetch(
+              `https://api.github.com/repos/${repo.full_name}`,
+              { headers: githubHeaders(token) }
+            )
+
+            if (!res.ok) return
+
+            const data = await res.json()
+            const currentStars: number = data.stargazers_count
+            const storedStars: number  = repo.stars ?? 0
+            const delta: number        = currentStars - storedStars
+
+            // ── Step 4: Check if viral ──
+            // Viral = gained more than 3x stored stars overnight
+            // OR gained more than 500 absolute stars (established repos)
+            const isViral =
+              (storedStars > 0 && currentStars >= storedStars * 3) ||
+              (delta >= 500)
+
+            if (isViral) {
+              console.log(`  🔥 VIRAL: ${repo.full_name} — ${storedStars} → ${currentStars} stars (+${delta})`)
+
+              // Create viral alert (ignore if already exists today)
+              await supabaseAdmin
+                .from('viral_alerts')
+                .upsert({
+                  repo_id:    repo.github_id,
+                  created_at: new Date().toISOString(),
+                }, {
+                  onConflict: 'repo_id', // one alert per repo per day
+                  ignoreDuplicates: true,
+                })
+
+              viralDetected++
+            }
+
+            // ── Step 5: Update star count in our database ──
+            // Keep our stored stars fresh regardless of viral status
+            if (delta > 0) {
+              await supabaseAdmin
+                .from('repos')
+                .update({
+                  stars:           currentStars,
+                  last_fetched_at: new Date().toISOString(),
+                })
+                .eq('github_id', repo.github_id)
+            }
+
+          } catch (err: any) {
+            // Silent fail — don't let one repo crash the whole check
+          }
+        }))
+
+        // Small delay between batches to respect GitHub rate limits
+        // GitHub allows 5,000 requests/hour with a token
+        // 10 repos per batch × delay = safe and steady
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+
+      console.log(`  ✓ Viral check complete — ${viralDetected} viral repos detected`)
+    }
+  } catch (err: any) {
+    console.error('  ✗ Phase 4 failed:', err.message)
+  }
+
   // ── DONE ──────────────────────────────────────────────────
   console.log(`\n✅ GitGyan sync complete!`)
   console.log(`   ✓ Synced:  ${totalSynced} repos`)
   console.log(`   ✗ Failed:  ${totalFailed} repos`)
+  console.log(`   🔥 Viral:  ${viralDetected} repos detected`)
   console.log(`   📅 Date:   ${today}`)
 
   return NextResponse.json({
-    success: true,
-    date:    today,
-    synced:  totalSynced,
-    failed:  totalFailed,
+    success:  true,
+    date:     today,
+    synced:   totalSynced,
+    failed:   totalFailed,
+    viral:    viralDetected,
     languages: LANGUAGES.length,
     aiTopics:  AI_TOPICS.length,
-    message: `Synced ${totalSynced} repos across ${LANGUAGES.length} languages and ${AI_TOPICS.length} AI topics`,
+    message:  `Synced ${totalSynced} repos, detected ${viralDetected} viral repos`,
   })
 }
