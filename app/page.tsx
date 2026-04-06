@@ -187,6 +187,10 @@ export default function Home() {
 
   const handleClick = async (repo: Repo) => {
     setSelected(repo); setSummary(null); setAiLoading(true)
+    // Scroll panel into view on mobile
+    setTimeout(() => {
+      document.getElementById('ai-panel')?.scrollIntoView({behavior:'smooth', block:'nearest'})
+    }, 100)
     try {
       const res = await fetch('/api/summary', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -236,7 +240,7 @@ export default function Home() {
     navLink:  {fontSize:13,color:'var(--muted)',padding:'5px 12px',borderRadius:8},
     navRight: {marginLeft:'auto',display:'flex',gap:8,alignItems:'center'},
     ghBtn:    {display:'flex',alignItems:'center',gap:6,fontSize:13,color:'var(--muted)',padding:'7px 16px',borderRadius:9,border:'1px solid rgba(255,255,255,0.2)',background:'transparent'},
-    main:     {position:'relative',zIndex:1,paddingTop:80,paddingBottom:60,maxWidth:1200,margin:'0 auto',padding:'80px 32px 60px'},
+    main:     {position:'relative',zIndex:1,paddingTop:80,paddingBottom:60,maxWidth:1200,margin:'0 auto',padding:'80px 32px 60px',overflowX:'hidden' as const},
     eyebrow:  {display:'inline-flex',alignItems:'center',gap:8,fontFamily:'var(--mono)',fontSize:11,color:'var(--accent)',letterSpacing:'0.12em',textTransform:'uppercase',padding:'5px 14px',border:'1px solid rgba(91,158,255,0.3)',borderRadius:100,background:'rgba(91,158,255,0.08)',marginBottom:24},
     eyeDot:   {width:6,height:6,borderRadius:'50%',background:'var(--accent)'},
     h1:       {fontFamily:'var(--serif)',fontSize:'clamp(40px,5vw,64px)',lineHeight:1.08,letterSpacing:'-1px',marginBottom:20,background:'linear-gradient(160deg,#fff 50%,rgba(180,205,255,0.8) 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'},
@@ -253,8 +257,8 @@ export default function Home() {
     searchIn: {width:'100%',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:'10px 16px 10px 40px',fontSize:14,color:'var(--text)',transition:'border-color 0.2s'},
     sortRow:  {display:'flex',gap:6},
     repoCount:{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)',marginLeft:'auto'},
-    content:  {display:'flex',gap:20,alignItems:'flex-start'},
-    list:     {flex:1,display:'flex',flexDirection:'column' as const},
+    content:  {display:'flex',gap:20,alignItems:'flex-start',width:'100%',overflow:'hidden' as const},
+    list:     {flex:1,display:'flex',flexDirection:'column' as const,minWidth:0},
     rank:     {fontFamily:'var(--mono)',fontSize:16,color:'rgba(255,255,255,0.12)',minWidth:32,paddingTop:2},
     info:     {flex:1,minWidth:0},
     nameRow:  {display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' as const,marginBottom:4},
@@ -266,8 +270,8 @@ export default function Home() {
     metaAge:  {fontFamily:'var(--mono)',fontSize:11,color:'var(--muted2)'},
 
     // AI panel
-    panel:    {width:300,flexShrink:0,position:'sticky' as const,top:80},
-    panelBox: {background:'var(--bg2)',border:'1px solid rgba(91,158,255,0.25)',borderRadius:14,padding:20},
+    panel:    {width:300,maxWidth:300,flexShrink:0,position:'sticky' as const,top:80,},
+    panelBox: {background:'var(--bg2)',border:'1px solid rgba(91,158,255,0.25)',borderRadius:14,padding:20,maxHeight:'calc(100vh - 100px)',overflowY:'auto' as const},
     panelHdr: {display:'flex',alignItems:'center',gap:8,marginBottom:16,paddingBottom:14,borderBottom:'1px solid rgba(255,255,255,0.07)'},
     aiIcon:   {width:22,height:22,borderRadius:6,background:'rgba(167,139,250,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0},
     aiLabel:  {fontFamily:'var(--mono)',fontSize:10,color:'#a78bfa',letterSpacing:'0.06em'},
@@ -417,7 +421,7 @@ export default function Home() {
 
             {/* AI Panel */}
             {selected && (
-              <div style={S.panel}>
+              <div id="ai-panel" style={S.panel}>
                 <div style={S.panelBox}>
                   <div style={S.panelHdr}>
                     <div style={S.aiIcon}>✦</div>
