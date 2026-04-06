@@ -1,76 +1,81 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
-export async function GET() {
-  const token = process.env.GITHUB_TOKEN
+// ─── READ FROM SUPABASE ───────────────────────────────────────
+// This route now reads from Supabase instead of hitting GitHub
+// GitHub sync happens separately via /api/cron/sync-github
+// This makes page loads instant and doesn't burn API rate limits
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const dateStr = today.toISOString().split('T')[0]
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const language  = searchParams.get('language') || null
+  const sortBy    = searchParams.get('sort') || 'stars'
+  const limit     = parseInt(searchParams.get('limit') || '20')
+  const offset    = parseInt(searchParams.get('offset') || '0')
+  const minStars  = parseInt(searchParams.get('minStars') || '5')
 
-  const response = await fetch(
-    `https://api.github.com/search/repositories?q=created:>=${dateStr}&sort=stars&order=desc&per_page=15`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    }
-  )
-
-  const data = await response.json()
-  const repos = data.items || []
-
-  // Store each repo in Supabase
-  for (const repo of repos) {
-    const { error } = await supabaseAdmin
+  try {
+    let query = supabase
       .from('repos')
-      .upsert({
-        github_id: repo.id,
-        name: repo.name,
-        full_name: repo.full_name,
-        description: repo.description,
-        language: repo.language,
-        stars: repo.stargazers_count,
-        forks: repo.forks_count,
-        watchers: repo.watchers_count,
-        open_issues: repo.open_issues_count,
-        github_url: repo.html_url,
-        topics: repo.topics,
-        owner_login: repo.owner?.login,
-        github_created_at: repo.created_at,
-        github_updated_at: repo.updated_at,
-        fetch_status: 'complete',
-        last_fetched_at: new Date().toISOString(),
-      }, {
-        onConflict: 'github_id'
-      })
+      .select('*', { count: 'exact' })
+      .eq('fetch_status', 'complete')
+      .gte('stars', minStars)
+
+    // Language filter
+    if (language && language !== 'all') {
+      query = query.eq('language', language)
+    }
+
+    // Sort
+    const sortColumn = sortBy === 'stars' ? 'stars' : 'github_created_at'
+    query = query.order(sortColumn, { ascending: false })
+
+    // Pagination
+    query = query.range(offset, offset + limit - 1)
+
+    const { data: repos, count, error } = await query
 
     if (error) {
-      console.error('Error storing repo:', repo.name, error.message)
-    } else {
-      console.log('Stored repo:', repo.name)
+      console.error('Supabase error:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-  }
 
-  // Update daily stats
-  await supabaseAdmin
-    .from('daily_stats')
-    .upsert({
-      date: dateStr,
-      total_repos_scanned: data.total_count,
-      avg_stars_top15: repos.reduce((sum: number, r: any) => 
-        sum + r.stargazers_count, 0) / repos.length,
-    }, {
-      onConflict: 'date'
+    // Get today's daily stats
+    const today = new Date().toISOString().split('T')[0]
+    const { data: stats } = await supabase
+      .from('daily_stats')
+      .select('*')
+      .eq('date', today)
+      .single()
+
+    // Map to the shape the frontend expects
+    const mapped = (repos ?? []).map((r: any) => ({
+      id:                r.github_id,
+      name:              r.name,
+      full_name:         r.full_name,
+      description:       r.description,
+      stargazers_count:  r.stars,
+      forks_count:       r.forks,
+      language:          r.language,
+      html_url:          r.github_url,
+      created_at:        r.github_created_at,
+      updated_at:        r.github_updated_at,
+      topics:            r.topics || [],
+      owner: {
+        login: r.owner_login,
+      },
+    }))
+
+    return NextResponse.json({
+      repos:   mapped,
+      total:   stats?.total_repos_scanned ?? count ?? 0,
+      count:   count ?? 0,
+      date:    today,
+      source:  'supabase', // flag so you know it's cached
     })
 
-  console.log(`✓ Stored ${repos.length} repos in Supabase`)
-
-  return NextResponse.json({
-    repos: repos,
-    total: data.total_count,
-    date: dateStr,
-    stored: repos.length,
-  })
+  } catch (err: any) {
+    console.error('Repos route error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
 }
