@@ -145,7 +145,7 @@ async function fetchAndSave(
 
   // Rate limit: GitHub allows 30 search req/min
   // 2.5s delay keeps us well under the limit
-  await new Promise(resolve => setTimeout(resolve, 2500))
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
   return { synced, failed }
 }
@@ -244,8 +244,13 @@ export async function GET(request: Request) {
   //
   // Viral threshold: gained 3x their stored stars overnight
   // Example: stored=500, current=1800 → delta=1300 → VIRAL 🔥
+  // ── PHASE 4: Temporarily moved to /api/cron/detect-viral ── 04/06/2026
+  // Disabled here to avoid Vercel 5min timeout
+  // Runs separately at 4am UTC via its own cron job
+  
+  const viralDetected = 0 // placeholder until detect-viral cron runs
 
-  console.log(`\n── Phase 4: Viral detection on existing repos ──`)
+  /*console.log(`\n── Phase 4: Viral detection on existing repos ──`)
 
   let viralDetected = 0
 
@@ -341,13 +346,13 @@ export async function GET(request: Request) {
     }
   } catch (err: any) {
     console.error('  ✗ Phase 4 failed:', err.message)
-  }
+  }*/ 
 
   // ── DONE ──────────────────────────────────────────────────
   console.log(`\n✅ GitGyan sync complete!`)
   console.log(`   ✓ Synced:  ${totalSynced} repos`)
   console.log(`   ✗ Failed:  ${totalFailed} repos`)
-  console.log(`   🔥 Viral:  ${viralDetected} repos detected`)
+  //console.log(`   🔥 Viral:  ${viralDetected} repos detected`)  -- Removed Vercel 5 min
   console.log(`   📅 Date:   ${today}`)
 
   return NextResponse.json({
@@ -355,9 +360,9 @@ export async function GET(request: Request) {
     date:     today,
     synced:   totalSynced,
     failed:   totalFailed,
-    viral:    viralDetected,
+    //viral:    viralDetected,  -- Vercel 5 min timeout 04/06/2026
     languages: LANGUAGES.length,
     aiTopics:  AI_TOPICS.length,
-    message:  `Synced ${totalSynced} repos, detected ${viralDetected} viral repos`,
+    message:  `Synced ${totalSynced} repos across ${LANGUAGES.length} languages and ${AI_TOPICS.length} AI topics`,
   })
 }
