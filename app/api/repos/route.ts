@@ -48,6 +48,11 @@ export async function GET(request: Request) {
       .eq('date', today)
       .single()
 
+    const { count: totalInDb } = await supabase
+    .from('repos')
+    .select('*', { count: 'exact', head: true })
+    .eq('fetch_status', 'complete')
+
     // Map to the shape the frontend expects
     const mapped = (repos ?? []).map((r: any) => ({
       id:                r.github_id,
@@ -68,7 +73,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       repos:   mapped,
-      total:   stats?.total_repos_scanned ?? count ?? 0,
+      total:   totalInDb ?? 0,
       count:   count ?? 0,
       date:    today,
       source:  'supabase', // flag so you know it's cached

@@ -216,7 +216,7 @@ export async function GET(request: Request) {
         .from('daily_stats')
         .upsert({
           date:                today,
-          total_repos_scanned: data.total_count,
+          total_repos_scanned: totalSynced,
           avg_stars_top15:     totalSynced > 0 ? totalSynced / LANGUAGES.length : 0,
         }, {
           onConflict: 'date',
