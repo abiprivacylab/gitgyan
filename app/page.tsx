@@ -180,7 +180,7 @@ export default function Home() {
   const [sort, setSort] = useState<'stars'|'new'|'thisWeek'>('thisWeek')
 
   useEffect(() => {
-    fetch('/api/repos?sort=${sort}').then(r=>r.json()).then(d=>{
+    fetch(`/api/repos?sort=${sort}`).then(r=>r.json()).then(d=>{
       setRepos(d.repos||[]); setTotal(d.total); setLoading(false)
     }).catch(()=>setLoading(false))
   }, [sort])
@@ -202,7 +202,7 @@ export default function Home() {
 
   const filtered = repos
     .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase()) || r.language?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a,b) => sort==='stars' ? b.stargazers_count-a.stargazers_count : new Date(b.created_at).getTime()-new Date(a.created_at).getTime())
+    .sort((a,b) => sort==='stars' ? b.stargazers_count-a.stargazers_count : sort==='new' ? new Date(b.created_at).getTime()-new Date(a.created_at).getTime() : b.stargazers_count-a.stargazers_count)
 
   // ── Style helpers (functions kept outside S to satisfy TypeScript) ──
   const sortBtnStyle = (active: boolean): React.CSSProperties => ({
