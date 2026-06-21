@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -13,6 +14,9 @@ type FeedbackItem = {
   id: number
   name: string
   github_username: string | null
+  github_followers: number | null
+  github_repos: number | null
+  github_avatar: string | null
   role: string | null
   rating: number
   comment: string
@@ -141,11 +145,35 @@ export default function FeedbackPage() {
     if (rating === 0) { setError('Please select a rating'); return }
 
     setSubmitting(true)
+
+    // ── Fetch GitHub stats if username provided ──
+    let githubFollowers = null
+    let githubRepos = null
+    let githubAvatar = null
+
+    if (github.trim()) {
+      try {
+        const res = await fetch(`https://api.github.com/users/${github.trim()}`)
+        if (res.ok) {
+          const data = await res.json()
+          githubFollowers = data.followers ?? null
+          githubRepos     = data.public_repos ?? null
+          githubAvatar    = data.avatar_url ?? null
+        }
+      } catch (e) {
+        // Silent fail — GitHub stats are optional
+        console.log('GitHub stats fetch failed silently')
+      }
+    }
+
     const { error: err } = await supabase
       .from('feedback')
       .insert({
         name:             name.trim(),
         github_username:  github.trim() || null,
+        github_followers: githubFollowers,
+        github_repos:     githubRepos,
+        github_avatar:    githubAvatar,
         role:             role || null,
         rating,
         comment:          comment.trim(),
@@ -378,31 +406,61 @@ export default function FeedbackPage() {
 
                   {/* Header */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{f.name}</span>
-                        {f.role && (
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', background: 'rgba(91,158,255,0.1)', border: '1px solid rgba(91,158,255,0.2)', padding: '2px 8px', borderRadius: 100 }}>
-                            {f.role}
-                          </span>
-                        )}
-                        {f.would_recommend && (
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)', background: 'rgba(74,222,158,0.08)', border: '1px solid rgba(74,222,158,0.2)', padding: '2px 8px', borderRadius: 100 }}>
-                            ✓ Recommends
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {f.github_username && (
-                          <a href={`https://github.com/${f.github_username}`} target="_blank"
-                            style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted2)', textDecoration: 'none' }}>
-                            github.com/{f.github_username}
-                          </a>
-                        )}
-                        {f.city && <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted2)' }}>· {f.city}</span>}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+
+                      {/* Avatar */}
+                      {f.github_avatar ? (
+                        <img src={f.github_avatar} alt={f.name}
+                          style={{ width: 42, height: 42, borderRadius: '50%', border: '2px solid rgba(91,158,255,0.3)', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(91,158,255,0.15)', border: '2px solid rgba(91,158,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                          {f.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{f.name}</span>
+                          {f.role && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', background: 'rgba(91,158,255,0.1)', border: '1px solid rgba(91,158,255,0.2)', padding: '2px 8px', borderRadius: 100 }}>
+                              {f.role}
+                            </span>
+                          )}
+                          {f.would_recommend && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)', background: 'rgba(74,222,158,0.08)', border: '1px solid rgba(74,222,158,0.2)', padding: '2px 8px', borderRadius: 100 }}>
+                              ✓ Recommends
+                            </span>
+                          )}
+                        </div>
+
+                        {/* GitHub stats row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          {f.github_username && (
+                            <a href={`https://github.com/${f.github_username}`} target="_blank"
+                              style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', textDecoration: 'none', opacity: 0.8 }}>
+                              github.com/{f.github_username}
+                            </a>
+                          )}
+                          {f.github_followers != null && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted2)' }}>
+                              · ⭐ {f.github_followers.toLocaleString()} followers
+                            </span>
+                          )}
+                          {f.github_repos != null && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted2)' }}>
+                              · 📦 {f.github_repos} repos
+                            </span>
+                          )}
+                          {f.city && (
+                            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted2)' }}>
+                              · 📍 {f.city}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ color: '#fcd34d', fontSize: 14, marginBottom: 2 }}>
                         {'★'.repeat(f.rating)}{'☆'.repeat(5 - f.rating)}
                       </div>
