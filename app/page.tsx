@@ -178,10 +178,11 @@ export default function Home() {
   const [aiLoading, setAiLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<'stars'|'new'|'thisWeek'>('thisWeek')
+  const [githubTotal, setGithubTotal] = useState(0)
 
   useEffect(() => {
     fetch(`/api/repos?sort=${sort}`).then(r=>r.json()).then(d=>{
-      setRepos(d.repos||[]); setTotal(d.total); setLoading(false)
+      setRepos(d.repos||[]); setTotal(d.total || 0); setGithubTotal(d.githubTotal || 0); setLoading(false)
     }).catch(()=>setLoading(false))
   }, [sort])
 
@@ -337,17 +338,17 @@ export default function Home() {
             <div style={S.statPill}>
               <span className="pulse" style={{...S.statDot,background:'#4ade9e'}}/>
               <span style={S.statVal}>{repos.length}</span>
-              <span style={S.statLbl}>high-signal repos today</span>
+              <span style={S.statLbl}>high-signal picks</span>
             </div>
             <div style={S.statPill}>
               <span style={{...S.statDot,background:'#fcd34d'}}/>
               <span style={S.statVal}>{total.toLocaleString()}</span>
-              <span style={S.statLbl}>repos scanned</span>
+              <span style={S.statLbl}>analyzed by GitGyan AI</span>
             </div>
             <div style={S.statPill}>
               <span style={{...S.statDot,background:'#a78bfa'}}/>
-              <span style={S.statVal}>{repos.filter(r=>r.topics?.length>0).length}</span>
-              <span style={S.statLbl}>AI summaries ready</span>
+              <span style={S.statVal}>{githubTotal.toLocaleString()}</span>
+              <span style={S.statLbl}>repos on GitHub today</span>
             </div>
           </div>
         )}

@@ -90,6 +90,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       repos:   mapped,
       total:   totalInDb ?? 0,
+      githubTotal: stats?.total_repos_scanned ?? 0,
       count:   count ?? 0,
       date:    today,
       source:  'supabase',
