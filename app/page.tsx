@@ -348,7 +348,7 @@ export default function Home() {
             <div style={S.statPill}>
               <span style={{...S.statDot,background:'#a78bfa'}}/>
               <span style={S.statVal}>{githubTotal.toLocaleString()}</span>
-              <span style={S.statLbl}>repos on GitHub today</span>
+              <span style={S.statLbl}>repos on GitHub this week</span>
             </div>
           </div>
         )}
