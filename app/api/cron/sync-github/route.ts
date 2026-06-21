@@ -205,7 +205,7 @@ export async function GET(request: Request) {
     const yesterdayStr = yesterday.toISOString().split('T')[0]
 
     const res = await fetch(
-      `https://api.github.com/search/repositories?q=created:>=${yesterdayStr}+stars:>5&sort=stars&order=desc&per_page=1`,
+      `https://api.github.com/search/repositories?q=created:>=${yesterdayStr}&sort=stars&order=desc&per_page=1`,
       { headers: githubHeaders(token) }
     )
 
@@ -216,7 +216,7 @@ export async function GET(request: Request) {
         .from('daily_stats')
         .upsert({
           date:                today,
-          total_repos_scanned: totalSynced,
+          total_repos_scanned: data.total_count,
           avg_stars_top15:     totalSynced > 0 ? totalSynced / LANGUAGES.length : 0,
         }, {
           onConflict: 'date',
