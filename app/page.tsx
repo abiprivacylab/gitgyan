@@ -304,6 +304,9 @@ export default function Home() {
           {['Trending','Languages','Topics','Insights'].map(l=>(
             <a key={l} href="#" className="nav-link" style={S.navLink}>{l}</a>
           ))}
+          <a href="/feedback" className="nav-link" style={{...S.navLink, color:'var(--accent)'}}>
+            💬 Feedback
+          </a>
         </div>
         <div style={S.navRight}>
           <a href="https://github.com/abiprivacylab/gitgyan" target="_blank" className="gh-btn" style={S.ghBtn}>
