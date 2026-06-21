@@ -9,10 +9,10 @@ import { supabase } from '@/lib/supabase'
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const language  = searchParams.get('language') || null
-  const sortBy    = searchParams.get('sort') || 'stars'
+  const sortBy    = searchParams.get('sort') || 'thisWeek'  // ← default changed
   const limit     = parseInt(searchParams.get('limit') || '20')
   const offset    = parseInt(searchParams.get('offset') || '0')
-  const minStars  = parseInt(searchParams.get('minStars') || '5')
+  const minStars  = parseInt(searchParams.get('minStars') || '10') // ← raised from 5
 
   try {
     let query = supabase
@@ -26,9 +26,24 @@ export async function GET(request: Request) {
       query = query.eq('language', language)
     }
 
-    // Sort
-    const sortColumn = sortBy === 'stars' ? 'stars' : 'github_created_at'
-    query = query.order(sortColumn, { ascending: false })
+    // ── Sort logic ──────────────────────────────────────────
+    if (sortBy === 'thisWeek') {
+      // Repos created in last 7 days, sorted by stars
+      // This shows what's gaining momentum RIGHT NOW
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      query = query
+        .gte('github_created_at', sevenDaysAgo.toISOString())
+        .order('stars', { ascending: false })
+
+    } else if (sortBy === 'stars') {
+      // All-time stars — claw-code territory
+      query = query.order('stars', { ascending: false })
+
+    } else if (sortBy === 'new') {
+      // Newest repos first
+      query = query.order('github_created_at', { ascending: false })
+    }
 
     // Pagination
     query = query.range(offset, offset + limit - 1)
@@ -48,10 +63,11 @@ export async function GET(request: Request) {
       .eq('date', today)
       .single()
 
+    // Get total repos in our database
     const { count: totalInDb } = await supabase
-    .from('repos')
-    .select('*', { count: 'exact', head: true })
-    .eq('fetch_status', 'complete')
+      .from('repos')
+      .select('*', { count: 'exact', head: true })
+      .eq('fetch_status', 'complete')
 
     // Map to the shape the frontend expects
     const mapped = (repos ?? []).map((r: any) => ({
@@ -76,7 +92,8 @@ export async function GET(request: Request) {
       total:   totalInDb ?? 0,
       count:   count ?? 0,
       date:    today,
-      source:  'supabase', // flag so you know it's cached
+      source:  'supabase',
+      sortBy:  sortBy, // useful for debugging
     })
 
   } catch (err: any) {

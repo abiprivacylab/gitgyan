@@ -177,13 +177,13 @@ export default function Home() {
   const [summary, setSummary] = useState<AISummary|null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<'stars'|'new'>('stars')
+  const [sort, setSort] = useState<'stars'|'new'|'thisWeek'>('thisWeek')
 
   useEffect(() => {
-    fetch('/api/repos').then(r=>r.json()).then(d=>{
+    fetch('/api/repos?sort=${sort}').then(r=>r.json()).then(d=>{
       setRepos(d.repos||[]); setTotal(d.total); setLoading(false)
     }).catch(()=>setLoading(false))
-  }, [])
+  }, [sort])
 
   const handleClick = async (repo: Repo) => {
     setSelected(repo); setSummary(null); setAiLoading(true)
@@ -367,7 +367,7 @@ export default function Home() {
             />
           </div>
           <div style={S.sortRow}>
-            {([['stars','★ Stars'],['new','✦ Newest']] as const).map(([v,l])=>(
+            {([['thisWeek','🔥 This Week'],['stars','★ All Time'],['new','✦ Newest']] as const).map(([v,l])=>(
               <button key={v} className="sort-btn" style={sortBtnStyle(sort===v)} onClick={()=>setSort(v)}>{l}</button>
             ))}
           </div>
