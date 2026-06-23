@@ -1,3 +1,5 @@
+'use client'
+
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;600&family=DM+Mono&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
