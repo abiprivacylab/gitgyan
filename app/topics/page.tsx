@@ -22,8 +22,8 @@ export default function ComingSoon() {
       <style>{css}</style>
 
       {/* Stars */}
-      {[...Array(20)].map((_, i) => (
-        <div key={i} style={{
+      {typeof window !== 'undefined' && [...Array(20)].map((_, i) => (
+       <div key={i} style={{
           position: 'fixed',
           width: Math.random() * 2 + 1,
           height: Math.random() * 2 + 1,
