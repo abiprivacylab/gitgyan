@@ -5,7 +5,6 @@ const css = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #06080f; color: #f0f2ff; font-family: 'DM Sans', sans-serif; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes twinkle { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
 `
 
 // Change these per page:
