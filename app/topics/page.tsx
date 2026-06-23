@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;600&family=DM+Mono&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -7,36 +9,43 @@ const css = `
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 `
 
-// Change these per page:
 const PAGE = {
-  icon:        '🤖',
-  title:       'AI Topics',
+  icon: "🤖",
+  title: "AI Topics",
   description: 'Explore repos by AI topic — Claude, MCP, LLM, AI-Agents, RAG and more.',
-  eta:         'Coming Month 2',
+  eta: 'Coming Month 2',
 }
 
 export default function ComingSoon() {
+  const [stars, setStars] = useState<any[]>([])
+
+  useEffect(() => {
+    setStars(Array.from({length: 20}, (_, i) => ({
+      id: i,
+      width: Math.random() * 2 + 1,
+      height: Math.random() * 2 + 1,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      opacity: Math.random() * 0.5 + 0.1,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+    })))
+  }, [])
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
       <style>{css}</style>
 
-      {/* Stars */}
-      {typeof window !== 'undefined' && [...Array(20)].map((_, i) => (
-       <div key={i} style={{
-          position: 'fixed',
-          width: Math.random() * 2 + 1,
-          height: Math.random() * 2 + 1,
-          borderRadius: '50%',
-          background: '#a8c8ff',
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
-          opacity: Math.random() * 0.5 + 0.1,
-          animation: `pulse ${Math.random() * 3 + 2}s ease-in-out infinite`,
-          animationDelay: `${Math.random() * 2}s`,
+      {stars.map((s) => (
+        <div key={s.id} style={{
+          position: 'fixed', width: s.width, height: s.height,
+          borderRadius: '50%', background: '#a8c8ff',
+          top: s.top, left: s.left, opacity: s.opacity,
+          animation: `pulse ${s.duration}s ease-in-out infinite`,
+          animationDelay: `${s.delay}s`,
         }} />
       ))}
 
-      {/* Nav */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', padding: '0 32px', height: 60, background: 'rgba(6,8,15,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.1)', zIndex: 100 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
@@ -54,27 +63,19 @@ export default function ComingSoon() {
           <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 19, color: '#fff' }}>GitGyan</span>
         </a>
         <div style={{ display: 'flex', gap: 4, marginLeft: 32 }}>
-          {[['/', 'Trending'], ['#', 'Languages'], ['#', 'Topics'], ['#', 'Insights'], ['/feedback', '💬 Feedback']].map(([href, label]) => (
-            <a key={label} href={href}
-              style={{ fontSize: 13, color: 'rgba(200,215,248,0.65)', padding: '5px 12px', borderRadius: 8, textDecoration: 'none' }}>
-              {label}
-            </a>
+          {[['/', 'Trending'], ['/languages', 'Languages'], ['/topics', 'Topics'], ['/insights', 'Insights'], ['/feedback', '💬 Feedback']].map(([href, label]) => (
+            <a key={label} href={href} style={{ fontSize: 13, color: label === "Topics" ? '#5b9eff' : 'rgba(200,215,248,0.65)', padding: '5px 12px', borderRadius: 8, textDecoration: 'none' }}>{label}</a>
           ))}
         </div>
         <div style={{ marginLeft: 'auto' }}>
-          <a href="https://github.com/abiprivacylab/gitgyan" target="_blank"
-            style={{ fontSize: 13, color: 'rgba(200,215,248,0.65)', padding: '7px 16px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none' }}>
-            ⭐ Star on GitHub
-          </a>
+          <a href="https://github.com/abiprivacylab/gitgyan" target="_blank" style={{ fontSize: 13, color: 'rgba(200,215,248,0.65)', padding: '7px 16px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none' }}>⭐ Star on GitHub</a>
         </div>
       </nav>
 
-      {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
-
         <div style={{ fontSize: 64, marginBottom: 24 }}>{PAGE.icon}</div>
 
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#5b9eff', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '5px 14px', border: '1px solid rgba(91,158,255,0.3)', borderRadius: 100, background: 'rgba(91,158,255,0.08)', marginBottom: 24 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#5b9eff', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '5px 14px', border: '1px solid rgba(91,158,255,0.3)', borderRadius: 100, background: 'rgba(91,158,255,0.08)', marginBottom: 24 }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5b9eff', animation: 'pulse 2s infinite' }} />
           {PAGE.eta}
         </div>
@@ -83,12 +84,9 @@ export default function ComingSoon() {
           {PAGE.title} Explorer
         </h1>
 
-        <p style={{ fontSize: 16, color: 'rgba(200,215,248,0.65)', lineHeight: 1.7, marginBottom: 32 }}>
-          {PAGE.description}
-        </p>
+        <p style={{ fontSize: 16, color: 'rgba(200,215,248,0.65)', lineHeight: 1.7, marginBottom: 32 }}>{PAGE.description}</p>
 
-        {/* Stats teaser */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 32, flexWrap: 'wrap' as const }}>
           <div style={{ background: '#0c1120', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 9, padding: '10px 20px', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
             <span style={{ color: '#fff', fontWeight: 600 }}>11,088</span>
             <span style={{ color: 'rgba(160,180,230,0.4)', marginLeft: 6 }}>repos ready</span>
@@ -99,19 +97,12 @@ export default function ComingSoon() {
           </div>
         </div>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/" style={{ background: 'rgba(91,158,255,0.15)', color: '#5b9eff', border: '1px solid rgba(91,158,255,0.3)', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-            ← Back to Trending
-          </a>
-          <a href="/feedback" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-            💬 Leave Feedback
-          </a>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' as const }}>
+          <a href="/" style={{ background: 'rgba(91,158,255,0.15)', color: '#5b9eff', border: '1px solid rgba(91,158,255,0.3)', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>← Back to Trending</a>
+          <a href="/feedback" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>💬 Leave Feedback</a>
         </div>
 
-        <p style={{ marginTop: 32, fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(160,180,230,0.3)' }}>
-          gitgyan.dev · Where Developers Find Wisdom
-        </p>
+        <p style={{ marginTop: 32, fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(160,180,230,0.3)' }}>gitgyan.dev · Where Developers Find Wisdom</p>
       </div>
     </div>
   )
