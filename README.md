@@ -6,7 +6,7 @@ GitGyan is an open-source, AI-powered GitHub discovery engine that scans 500,000
 
 [![Live](https://img.shields.io/badge/Live-gitgyan.dev-5b9eff?style=flat-square)](https://gitgyan.dev)
 [![GitHub Stars](https://img.shields.io/github/stars/abiprivacylab/gitgyan?style=flat-square&color=fcd34d)](https://github.com/abiprivacylab/gitgyan)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4ade9e?style=flat-square)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-4ade9e?style=flat-square)](LICENSE)
 [![Built with Claude](https://img.shields.io/badge/AI-Claude%20Haiku-9175ff?style=flat-square)](https://anthropic.com)
 
 ---
@@ -331,8 +331,10 @@ Built with ❤️ and [Claude AI](https://anthropic.com)
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
+Apache 2.0 License — see [LICENSE](LICENSE) for details.
+The signal scoring algorithm and viral detection 
+logic are proprietary and not included in this 
+open source release.
 ---
 
 *GitGyan — Where Developers Find Wisdom* 🌌

@@ -60,7 +60,8 @@ export async function GET(request: Request) {
     const { data: stats } = await supabase
       .from('daily_stats')
       .select('*')
-      .eq('date', today)
+      .order('date', { ascending: false })
+      .limit(1)
       .single()
 
     // Get total repos in our database
