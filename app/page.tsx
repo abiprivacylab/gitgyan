@@ -403,7 +403,7 @@ export default function Home() {
                       <div style={S.nameRow}>
                         <span style={S.org}>{repo.owner.login} /</span>
                         <span style={S.name}>{repo.name}</span>
-                        {repo.topics?.length>0 && <span style={badgeStyle('#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')}>✦ AI ready</span>}
+                        {repo.ai_summary && ( <span style={badgeStyle('#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')}>✦ AI ready</span> )}
                         {isNew && <span style={badgeStyle('#4ade9e','rgba(74,222,158,0.08)','rgba(74,222,158,0.3)')}>✦ new</span>}
                       </div>
                       <div style={S.desc}>{repo.description||'No description provided'}</div>

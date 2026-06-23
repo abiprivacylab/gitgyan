@@ -82,6 +82,7 @@ export async function GET(request: Request) {
       html_url:          r.github_url,
       created_at:        r.github_created_at,
       updated_at:        r.github_updated_at,
+      ai_summary:        r.ai_summary || null,
       topics:            r.topics || [],
       owner: {
         login: r.owner_login,
