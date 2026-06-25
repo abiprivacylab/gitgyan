@@ -355,6 +355,18 @@ export async function GET(request: Request) {
   //console.log(`   🔥 Viral:  ${viralDetected} repos detected`)  -- Removed Vercel 5 min
   console.log(`   📅 Date:   ${today}`)
 
+  // ── FINAL STEP: Snapshot all repos ───────────────────────
+  // Must run LAST — after repos table has fresh star counts
+  // A missed snapshot = irreplaceable gap in moat history
+  const { data: snapshotCount, error: snapErr } = await supabaseAdmin
+    .rpc('snapshot_all_repos')
+
+  if (snapErr) {
+    console.error('SNAPSHOT FAILED — moat at risk!', snapErr)
+    throw snapErr
+  }
+  console.log(`✅ Snapshotted ${snapshotCount} repos for ${today}`)
+
   return NextResponse.json({
     success:  true,
     date:     today,
