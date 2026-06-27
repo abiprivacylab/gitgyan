@@ -15,6 +15,7 @@ interface Repo {
   created_at: string
   owner: { login: string }
   topics: string[]
+  ai_summary: string | null
 }
 
 interface AISummary {
