@@ -195,18 +195,6 @@ export async function GET(request: Request) {
     totalFailed += failed
   }
 
-  // ── SNAPSHOT: Runs after repos updated, before Phase 3 ──
-  // Moved before Phase 3 so a timeout there never skips snapshot
-  // A missed snapshot = irreplaceable gap in moat history
-  const { data: snapshotCount, error: snapErr } = await supabaseAdmin
-    .rpc('snapshot_all_repos')
-
-  if (snapErr) {
-    console.error('SNAPSHOT FAILED — moat at risk!', snapErr)
-    throw snapErr
-  }
-  console.log(`✅ Snapshotted ${snapshotCount} repos for ${today}`)
-
   // ── PHASE 3: Update daily stats ───────────────────────────
   // Fetch overall GitHub stats for the dashboard counters
   console.log(`\n── Phase 3: Updating daily stats ──`)
